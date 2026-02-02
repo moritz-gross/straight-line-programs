@@ -1,7 +1,7 @@
 [project]
 name = "straight-line-programs"
 version = "0.1.0"
-description = "Add your description here"
+description = "research-oriented library for Straight-Line Programs (SLPs) and variants (RLSLP, ISLP) "
 readme = "README.md"
 authors = [
     { name = "Moritz Groß", email = "hi@mgross.dev" }
