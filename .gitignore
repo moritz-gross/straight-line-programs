@@ -1,0 +1,10 @@
+# IDE
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.python-version
+.idea/
+.idea/
