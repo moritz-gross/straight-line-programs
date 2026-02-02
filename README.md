@@ -8,9 +8,9 @@
   From GitHub:
 
   ```bash
-  uv add git+https://github.com/<user>/straight-line-programs.git
+  uv add git+https://github.com/moritz-gross/straight-line-programs.git
   # or
-  pip install git+https://github.com/<user>/straight-line-programs.git
+  pip install git+https://github.com/moritz-gross/straight-line-programs.git
   ```
 
   ## Quick usage
