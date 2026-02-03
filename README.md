@@ -1,49 +1,54 @@
 # straight-line-programs
 
-  Small teaching-oriented Python library for Straight-Line Programs (SLPs) and variants (RLSLP, ISLP).
-  Built to mirror the definitions and notation used in [Generalized Straight-Line Programs](https://arxiv.org/pdf/2404.07057) by Navarro et al.
+Small teaching-oriented Python library for Straight-Line Programs (SLPs) and variants (RLSLP, ISLP).
+Built to mirror the definitions and notation used in 
+- [Generalized Straight-Line Programs](https://arxiv.org/pdf/2404.07057) (Navarro et al.)
+- [Iterated Straight-Line Programs](https://arxiv.org/pdf/2402.09232) (Navarro et al.)
+- [Balancing Run-Length Straight-Line Programs](https://arxiv.org/pdf/2206.13027) (Navarro et al.)
 
-  ## Install
+very much WIP, so only some functionality is supported.
 
-  From GitHub:
+## Install
 
-  ```bash
-  uv add git+https://github.com/moritz-gross/straight-line-programs.git
-  # or
-  pip install git+https://github.com/moritz-gross/straight-line-programs.git
-  ```
+From GitHub:
 
-  ## Quick usage
-  ```
-  from straight_line_programs import (
-      SLP, RLSLP, ISLP,
-      TerminalRule, BinaryRule, RunLengthRule,
-      IterationRule, IterationComponent,
-  )
+```bash
+uv add git+https://github.com/moritz-gross/straight-line-programs.git
+# or
+pip install git+https://github.com/moritz-gross/straight-line-programs.git
+```
 
-  slp = SLP(
-      rules={
-          "A1": TerminalRule("a"),
-          "A2": TerminalRule("b"),
-          "A3": BinaryRule("A1", "A2"),
-          "S": BinaryRule("A3", "A3"),
-      },
-      start="S",
-  )
+## Quick usage
+```
+from straight_line_programs import (
+    SLP, RLSLP, ISLP,
+    TerminalRule, BinaryRule, RunLengthRule,
+    IterationRule, IterationComponent,
+)
 
-  slp.expression()         # "abab"
-  slp.expression_nested()  # "((a b) (a b))"
-  slp.length()             # 4
-  ```
+slp = SLP(
+    rules={
+        "A1": TerminalRule("a"),
+        "A2": TerminalRule("b"),
+        "A3": BinaryRule("A1", "A2"),
+        "S": BinaryRule("A3", "A3"),
+    },
+    start="S",
+)
 
-  ## Features
+slp.expression()         # "abab"
+slp.expression_nested()  # "((a b) (a b))"
+slp.length()             # 4
+```
 
-  - SLP / RLSLP / ISLP rule types
-  - Length computation without full expansion
-  - Safe full expansion (guarded by max length)
-  - Nested expression display (expression_nested())
+## Features
 
-  ## Development
-  ```bash
-  uv run pytest
+- SLP / RLSLP / ISLP rule types
+- Length computation without full expansion
+- Safe full expansion (guarded by max length)
+- Nested expression display (expression_nested())
+
+## Development
+```bash
+uv run pytest
   ```
