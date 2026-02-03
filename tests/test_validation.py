@@ -113,8 +113,11 @@ def test_islp_binary_and_iteration_edges():
     }
     islp = ISLP(rules, start="S")
     assert islp.length() == 3
+    assert islp.size() == 1 + 1 + 2 + 2
     assert islp.expression() == "aba"
+    assert islp.char_at(0) == "a"
     assert islp.char_at(2) == "a"
+    assert islp.substring(0, 1) == "a"
     assert islp.substring(1, 3) == "ba"
 
 
