@@ -7,4 +7,6 @@ __pycache__/
 .venv/
 .python-version
 .idea/
-.idea/
+
+# pytest-cov
+/.coverage
