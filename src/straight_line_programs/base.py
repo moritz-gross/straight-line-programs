@@ -89,10 +89,110 @@ class BaseGrammar:
             )
         return self._expand_symbol(sym)
 
+    def char_at(self, index: int, symbol: Optional[str] = None) -> str:
+        """Return the character at position index (0-based).
+
+        Args:
+            index: 0-based position in the expansion.
+            symbol: Nonterminal to index. Defaults to the start symbol.
+        """
+
+        sym = symbol or self.start
+        length = self.length(sym)
+        if index < 0 or index >= length:
+            raise IndexError(f"Index {index} out of range for length {length}.")
+        return self._char_at_symbol(sym, index)
+
+    def substring(
+        self,
+        start: int,
+        end: int,
+        symbol: Optional[str] = None,
+        include_end: bool = False,
+    ) -> str:
+        """Return the substring from start to end.
+
+        Default is end-exclusive: [start, end). Set include_end=True for [start, end].
+
+        Args:
+            start: 0-based starting index (inclusive).
+            end: 0-based ending index (exclusive by default).
+            symbol: Nonterminal to slice. Defaults to the start symbol.
+            include_end: Treat end as inclusive if True.
+        """
+
+        sym = symbol or self.start
+        length = self.length(sym)
+        if include_end:
+            if start < 0 or end < start or end >= length:
+                raise IndexError(
+                    f"Substring bounds must satisfy 0 <= start <= end < {length}."
+                )
+            end_exclusive = end + 1
+        else:
+            if start < 0 or end < start or end > length:
+                raise IndexError(
+                    f"Substring bounds must satisfy 0 <= start <= end <= {length}."
+                )
+            end_exclusive = end
+        if start == end_exclusive:
+            return ""
+        return self._substring_symbol(sym, start, end_exclusive)
+
     def _expand_symbol(self, symbol: str) -> str:
         """Recursively expand a symbol using the subclass rule semantics."""
         rule = self.rules[symbol]
         return self._rule_expand(rule, self._expand_symbol)
+
+    def _char_at_symbol(self, symbol: str, index: int) -> str:
+        """Return the character at index within a symbol expansion."""
+        rule = self.rules[symbol]
+        return self._rule_char_at(rule, index, self._char_at_symbol, self._lengths.__getitem__)
+
+    def _substring_symbol(self, symbol: str, start: int, end: int) -> str:
+        """Return the substring within a symbol expansion (end-exclusive)."""
+        rule = self.rules[symbol]
+        return self._rule_substring(
+            rule, start, end, self._substring_symbol, self._lengths.__getitem__
+        )
+
+    @staticmethod
+    def _char_in_repetition(symbol: str, repeat_count: int, index: int, get_char, get_len) -> str:
+        """Index into a repeated symbol block."""
+        base_len = get_len(symbol)
+        total_len = base_len * repeat_count
+        if index < 0 or index >= total_len:
+            raise IndexError(
+                f"Index {index} out of range for repeated length {total_len}."
+            )
+        local_index = index % base_len
+        return get_char(symbol, local_index)
+
+    @staticmethod
+    def _substring_in_repetition(
+        symbol: str, repeat_count: int, start: int, end: int, get_substring, get_len
+    ) -> str:
+        """Slice within a repeated symbol block (end-exclusive)."""
+        base_len = get_len(symbol)
+        total_len = base_len * repeat_count
+        if start < 0 or end < start or end > total_len:
+            raise IndexError(
+                f"Substring bounds must satisfy 0 <= start <= end <= {total_len}."
+            )
+        if start == end:
+            return ""
+        first_rep = start // base_len
+        last_rep = (end - 1) // base_len
+        parts = []
+        for rep in range(first_rep, last_rep + 1):
+            local_start = 0
+            local_end = base_len
+            if rep == first_rep:
+                local_start = start - rep * base_len
+            if rep == last_rep:
+                local_end = end - rep * base_len
+            parts.append(get_substring(symbol, local_start, local_end))
+        return "".join(parts)
 
     def size(self) -> int:
         """Return the grammar size as defined in the paper for this variant."""
@@ -117,4 +217,12 @@ class BaseGrammar:
 
     def _rule_expand(self, rule: object, expand_symbol) -> str:
         """Expand a rule to a concrete string."""
+        raise NotImplementedError
+
+    def _rule_char_at(self, rule: object, index: int, get_char, get_len) -> str:
+        """Return the character at index for a rule."""
+        raise NotImplementedError
+
+    def _rule_substring(self, rule: object, start: int, end: int, get_substring, get_len) -> str:
+        """Return the substring for a rule."""
         raise NotImplementedError

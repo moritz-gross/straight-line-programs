@@ -68,6 +68,40 @@ class RLSLP(BaseGrammar):
             return expand_symbol(rule.base) * rule.count
         raise GrammarValidationError("Unsupported rule type.")
 
+    def _rule_char_at(self, rule: RLSLPRule, index: int, get_char, get_len) -> str:
+        """Return the character at index for an RLSLP rule."""
+        if isinstance(rule, TerminalRule):
+            return rule.terminal[index]
+        if isinstance(rule, BinaryRule):
+            left_len = get_len(rule.left)
+            if index < left_len:
+                return get_char(rule.left, index)
+            return get_char(rule.right, index - left_len)
+        if isinstance(rule, RunLengthRule):
+            return self._char_in_repetition(rule.base, rule.count, index, get_char, get_len)
+        raise GrammarValidationError("Unsupported rule type.")
+
+    def _rule_substring(
+        self, rule: RLSLPRule, start: int, end: int, get_substring, get_len
+    ) -> str:
+        """Return the substring for an RLSLP rule (end-exclusive)."""
+        if isinstance(rule, TerminalRule):
+            return rule.terminal[start:end]
+        if isinstance(rule, BinaryRule):
+            left_len = get_len(rule.left)
+            if end <= left_len:
+                return get_substring(rule.left, start, end)
+            if start >= left_len:
+                return get_substring(rule.right, start - left_len, end - left_len)
+            left_part = get_substring(rule.left, start, left_len)
+            right_part = get_substring(rule.right, 0, end - left_len)
+            return left_part + right_part
+        if isinstance(rule, RunLengthRule):
+            return self._substring_in_repetition(
+                rule.base, rule.count, start, end, get_substring, get_len
+            )
+        raise GrammarValidationError("Unsupported rule type.")
+
     def length(self, symbol: str | None = None) -> int:
         """Return the length of the expansion of a symbol (defaults to start).
 

@@ -89,6 +89,86 @@ class ISLP(BaseGrammar):
             return "".join(parts)
         raise GrammarValidationError("Unsupported rule type.")
 
+    def _rule_char_at(self, rule: ISLPRule, index: int, get_char, get_len) -> str:
+        """Return the character at index for an ISLP rule."""
+        if isinstance(rule, TerminalRule):
+            return rule.terminal[index]
+        if isinstance(rule, BinaryRule):
+            left_len = get_len(rule.left)
+            if index < left_len:
+                return get_char(rule.left, index)
+            return get_char(rule.right, index - left_len)
+        if isinstance(rule, IterationRule):
+            if rule.k1 < 1 or rule.k2 < 1 or rule.k1 > rule.k2:
+                raise GrammarValidationError("Iteration bounds must satisfy 1 <= k1 <= k2.")
+            for component in rule.components:
+                if component.exponent < 0:
+                    raise GrammarValidationError("Iteration exponents must be >= 0.")
+            remaining = index
+            for i in range(rule.k1, rule.k2 + 1):
+                for component in rule.components:
+                    base_len = get_len(component.symbol)
+                    repeat_count = i ** component.exponent
+                    block_len = base_len * repeat_count
+                    if remaining < block_len:
+                        return self._char_in_repetition(
+                            component.symbol, repeat_count, remaining, get_char, get_len
+                        )
+                    remaining -= block_len
+            raise IndexError(f"Index {index} out of range for iteration rule.")
+        raise GrammarValidationError("Unsupported rule type.")
+
+    def _rule_substring(
+        self, rule: ISLPRule, start: int, end: int, get_substring, get_len
+    ) -> str:
+        """Return the substring for an ISLP rule (end-exclusive)."""
+        if isinstance(rule, TerminalRule):
+            return rule.terminal[start:end]
+        if isinstance(rule, BinaryRule):
+            left_len = get_len(rule.left)
+            if end <= left_len:
+                return get_substring(rule.left, start, end)
+            if start >= left_len:
+                return get_substring(rule.right, start - left_len, end - left_len)
+            left_part = get_substring(rule.left, start, left_len)
+            right_part = get_substring(rule.right, 0, end - left_len)
+            return left_part + right_part
+        if isinstance(rule, IterationRule):
+            if rule.k1 < 1 or rule.k2 < 1 or rule.k1 > rule.k2:
+                raise GrammarValidationError("Iteration bounds must satisfy 1 <= k1 <= k2.")
+            for component in rule.components:
+                if component.exponent < 0:
+                    raise GrammarValidationError("Iteration exponents must be >= 0.")
+            parts = []
+            pos = 0
+            for i in range(rule.k1, rule.k2 + 1):
+                for component in rule.components:
+                    base_len = get_len(component.symbol)
+                    repeat_count = i ** component.exponent
+                    block_len = base_len * repeat_count
+                    block_start = pos
+                    block_end = pos + block_len
+                    if block_end <= start:
+                        pos = block_end
+                        continue
+                    if block_start >= end:
+                        return "".join(parts)
+                    local_start = max(start, block_start) - block_start
+                    local_end = min(end, block_end) - block_start
+                    parts.append(
+                        self._substring_in_repetition(
+                            component.symbol,
+                            repeat_count,
+                            local_start,
+                            local_end,
+                            get_substring,
+                            get_len,
+                        )
+                    )
+                    pos = block_end
+            return "".join(parts)
+        raise GrammarValidationError("Unsupported rule type.")
+
     def length(self, symbol: str | None = None) -> int:
         """Return the length of the expansion of a symbol (defaults to start).
 

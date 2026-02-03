@@ -39,6 +39,8 @@ slp = SLP(
 slp.expression()         # "abab"
 slp.expression_nested()  # "((a b) (a b))"
 slp.length()             # 4
+slp.char_at(1)           # "b" (0-based)
+slp.substring(1, 3)      # "ba" (0-based, end-exclusive)
 ```
 
 ## Features
@@ -47,6 +49,7 @@ slp.length()             # 4
 - Length computation without full expansion
 - Safe full expansion (guarded by max length)
 - Nested expression display (expression_nested())
+- Random access (char_at) and substring extraction (substring), 0-based with end-exclusive default
 
 ## Development
 ```bash
